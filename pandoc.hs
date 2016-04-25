@@ -1260,6 +1260,7 @@ convertWithOpts opts args = do
   let laTeXOutput = format `elem` ["latex", "beamer"]
   let conTeXtOutput = format == "context"
   let html5Output = format == "html5"
+  let groffOutput = format == "ms"
 
   let laTeXInput = "latex" `isPrefixOf` readerName' ||
                     "beamer" `isPrefixOf` readerName'
@@ -1479,15 +1480,14 @@ convertWithOpts opts args = do
     IOByteStringWriter f -> f writerOptions doc' >>= writeFnBinary outputFile
     PureStringWriter f
       | pdfOutput -> do
-              -- make sure writer is latex or beamer or context or html5
-              unless (laTeXOutput || conTeXtOutput || html5Output) $
-                err 47 $ "cannot produce pdf output with " ++ format ++
-                         " writer"
-
-              let pdfprog = case () of
-                              _ | conTeXtOutput -> "context"
-                              _ | html5Output   -> "wkhtmltopdf"
-                              _                 -> latexEngine
+              pdfprog <- case () of
+                           _ | conTeXtOutput -> return "context"
+                           _ | html5Output   -> return "wkhtmltopdf"
+                           _ | groffOutput   -> return "groff"
+                           _ | laTeXOutput   -> return latexEngine
+                           _ -> err 47 $
+                                 "cannot produce pdf output with " ++ format ++
+                                 " writer"
               -- check for pdf creating program
               mbPdfProg <- findExecutable pdfprog
               when (isNothing mbPdfProg) $
