@@ -38,6 +38,7 @@ import Text.Pandoc.Options ( WriterOptions(..), WrapOption(..) )
 import Data.List ( intersperse )
 import Text.Pandoc.Definition
 import Text.Pandoc.Pretty
+import Text.Pandoc.Class (PandocMonad)
 
 prettyList :: [Doc] -> Doc
 prettyList ds =
@@ -70,8 +71,8 @@ prettyBlock (Div attr blocks) =
 prettyBlock block = text $ show block
 
 -- | Prettyprint Pandoc document.
-writeNative :: WriterOptions -> Pandoc -> String
-writeNative opts (Pandoc meta blocks) =
+writeNative :: PandocMonad m => WriterOptions -> Pandoc -> m String
+writeNative opts (Pandoc meta blocks) = return $
   let colwidth = if writerWrapText opts == WrapAuto
                     then Just $ writerColumns opts
                     else Nothing
